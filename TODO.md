@@ -1,0 +1,4 @@
+- [x] Create package.json with dependencies (whatsapp-web.js, axios)
+- [x] Create index.js with WhatsApp bot logic (sticker creation and AI integration)
+- [x] Run npm install to install dependencies
+- [x] Run node index.js to start the bot
