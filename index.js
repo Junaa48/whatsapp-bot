@@ -5,7 +5,6 @@ const axios = require('axios');
 const fs = require('fs');
 
 const SESSION_FILE_PATH = './session.json';
-
 let sessionCfg;
 if (fs.existsSync(SESSION_FILE_PATH)) {
   sessionCfg = require(SESSION_FILE_PATH);
@@ -22,8 +21,13 @@ const client = new Client({
       '--disable-accelerated-2d-canvas',
       '--no-first-run',
       '--no-zygote',
-      '--single-process', // <- this one doesn't work in Windows
-      '--disable-gpu'
+      '--disable-gpu',
+      '--disable-web-security',
+      '--disable-features=VizDisplayCompositor',
+      '--disable-background-timer-throttling',
+      '--disable-renderer-backgrounding',
+      '--disable-backgrounding-occluded-windows',
+      '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     ]
   }
 });
@@ -34,8 +38,12 @@ const MAX_HISTORY = 10; // Limit to last 10 messages per user
 
 client.on('qr', (qr) => {
   if (process.env.RAILWAY_ENVIRONMENT) {
+    qrcode.toFile('qr.png', qr, (err) => {
+      if (err) console.error('Error generating QR PNG:', err);
+      console.log('QR Code saved to qr.png');
+    });
     qrcode.toDataURL(qr, (err, url) => {
-      if (err) console.error('Error generating QR:', err);
+      if (err) console.error('Error generating QR URL:', err);
       console.log('QR Code URL:', url);
     });
   } else {
@@ -43,16 +51,33 @@ client.on('qr', (qr) => {
   }
 });
 
+
+
 client.on('authenticated', (session) => {
   console.log('Authenticated!');
-  sessionCfg = session;
-  fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), (err) => {
-    if (err) console.error(err);
-  });
+  fs.writeFileSync(SESSION_FILE_PATH, JSON.stringify(session));
 });
 
 client.on('ready', () => {
   console.log('WhatsApp Bot is ready!');
+});
+
+client.on('disconnected', (reason) => {
+  console.log('Client was disconnected:', reason);
+  // Optionally, reinitialize after a delay
+  setTimeout(() => {
+    console.log('Reinitializing client...');
+    client.initialize();
+  }, 5000);
+});
+
+client.on('auth_failure', (msg) => {
+  console.error('Authentication failure:', msg);
+  // Handle auth failure, perhaps reinitialize
+  setTimeout(() => {
+    console.log('Reinitializing client after auth failure...');
+    client.initialize();
+  }, 5000);
 });
 
 client.on('message', async (msg) => {
@@ -85,7 +110,10 @@ client.on('message', async (msg) => {
       }
 
       console.log('Sending to AI...');
-      const apiKey = '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';
+      const apiKey = process.env.OPENROUTER_API_KEY || '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';
+      if (!apiKey) {
+        throw new Error('OPENROUTER_API_KEY environment variable is not set');
+      }
       const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
         model: 'openai/gpt-3.5-turbo',
         messages: history
@@ -111,6 +139,17 @@ client.on('message', async (msg) => {
       console.error('Error with AI response:', error);
       msg.reply('Sorry, I encountered an error processing your message.');
     }
+  }
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // If it's a ProtocolError, reinitialize
+  if (reason && reason.message && reason.message.includes('Execution context was destroyed')) {
+    console.log('ProtocolError detected, reinitializing client...');
+    setTimeout(() => {
+      client.initialize();
+    }, 5000);
   }
 });
 

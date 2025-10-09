@@ -5,3 +5,5 @@
 - [x] Run npm install to install dependencies
 - [x] Run node index.js to start the bot
 - [x] Modify QR code generation to use PNG/URL for Railway deployment
+- [x] Switch to LegacySessionAuth for session persistence to fix Railway deployment issues
+- [x] Fix ProtocolError: Execution context was destroyed by adding more Puppeteer args and error handling

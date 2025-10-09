@@ -1,5 +1,5 @@
 node_modules/
 .env
-wa-session/
 *.log
 .DS_Store
+.wwebjs_auth/
