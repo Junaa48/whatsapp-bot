@@ -11,7 +11,20 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
 }
 
 const client = new Client({
-  session: sessionCfg
+  session: sessionCfg,
+  puppeteer: {
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--single-process', // <- this one doesn't work in Windows
+      '--disable-gpu'
+    ]
+  }
 });
 
 // Store conversation history per user
