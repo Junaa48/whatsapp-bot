@@ -4,3 +4,4 @@
 - [x] Create Dockerfile for deployment with required system packages
 - [x] Run npm install to install dependencies
 - [x] Run node index.js to start the bot
+- [x] Modify QR code generation to use PNG/URL for Railway deployment

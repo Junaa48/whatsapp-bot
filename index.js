@@ -1,5 +1,6 @@
 const { Client } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+const qrcodeTerminal = require('qrcode-terminal');
+const qrcode = require('qrcode');
 const axios = require('axios');
 const fs = require('fs');
 
@@ -32,7 +33,14 @@ const conversationHistory = new Map();
 const MAX_HISTORY = 10; // Limit to last 10 messages per user
 
 client.on('qr', (qr) => {
-  qrcode.generate(qr, { small: true });
+  if (process.env.RAILWAY_ENVIRONMENT) {
+    qrcode.toDataURL(qr, (err, url) => {
+      if (err) console.error('Error generating QR:', err);
+      console.log('QR Code URL:', url);
+    });
+  } else {
+    qrcodeTerminal.generate(qr, { small: true });
+  }
 });
 
 client.on('authenticated', (session) => {
