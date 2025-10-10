@@ -92,6 +92,8 @@ client.on('auth_failure', (msg) => {
 
 client.on('message', async (msg) => {
   console.log(`Received message from ${msg.from}: ${msg.body || 'media'}`);
+  // Ignore messages from the bot itself
+  if (msg.from === client.info.wid._serialized) return;
   if (msg.hasMedia) {
     try {
       const media = await msg.downloadMedia();
