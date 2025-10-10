@@ -1,9 +1,11 @@
+require('dotenv').config();
 const { Client } = require('whatsapp-web.js');
 const qrcodeTerminal = require('qrcode-terminal');
 const qrcode = require('qrcode');
 const axios = require('axios');
 const fs = require('fs');
 const express = require('express');
+const cron = require('node-cron');
 
 const SESSION_FILE_PATH = './session.json';
 let sessionCfg;
@@ -61,6 +63,13 @@ client.on('authenticated', (session) => {
 
 client.on('ready', () => {
   console.log('WhatsApp Bot is ready!');
+  // Start auto chat cron job every 10 minutes
+  cron.schedule('*/10 * * * *', () => {
+    if (client.info) {
+      client.sendMessage(client.info.wid._serialized, 'Auto keep-alive message');
+      console.log('Sent auto keep-alive message at', new Date().toISOString());
+    }
+  });
 });
 
 client.on('disconnected', (reason) => {
@@ -111,7 +120,7 @@ client.on('message', async (msg) => {
       }
 
       console.log('Sending to AI...');
-      const apiKey = process.env.OPENROUTER_API_KEY || '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';
+      const apiKey = process.env.OPENROUTER_API_KEY;
       if (!apiKey) {
         throw new Error('OPENROUTER_API_KEY environment variable is not set');
       }
@@ -156,7 +165,14 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Express server for keep-alive
 const app = express();
-app.get("/", (req, res) => res.send("Bot aktif 🚀"));
+app.get("/", (req, res) => {
+  console.log('Ping received at', new Date().toISOString());
+  res.send("Bot aktif 🚀");
+});
+app.get("/status", (req, res) => {
+  const status = client.info ? 'ready' : 'initializing';
+  res.json({ status, uptime: process.uptime() });
+});
 app.listen(3000, () => console.log("Keep-alive server aktif di port 3000"));
 
 console.log('Initializing client...');
