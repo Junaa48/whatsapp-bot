@@ -94,18 +94,9 @@ client.on('message', async (msg) => {
   console.log(`Received message from ${msg.from}: ${msg.body || 'media'}`);
   // Ignore messages from the bot itself
   if (msg.from === client.info.wid._serialized) return;
-  if (msg.hasMedia) {
-    try {
-      const media = await msg.downloadMedia();
-      if (media.mimetype.startsWith('image/')) {
-        console.log('Creating sticker...');
-        await client.sendMessage(msg.from, media, { sendMediaAsSticker: true });
-        console.log('Sticker sent.');
-      }
-    } catch (error) {
-      console.error('Error creating sticker:', error);
-    }
-  } else {
+
+  // Handle AI responses only if message starts with '.'
+  if (msg.body && msg.body.startsWith('.')) {
     try {
       const userId = msg.from;
       if (!conversationHistory.has(userId)) {
@@ -113,8 +104,11 @@ client.on('message', async (msg) => {
       }
       const history = conversationHistory.get(userId);
 
+      // Remove the leading '.' from the message
+      const userMessage = msg.body.slice(1);
+
       // Add user message to history
-      history.push({ role: 'user', content: msg.body });
+      history.push({ role: 'user', content: userMessage });
 
       // Limit history
       if (history.length > MAX_HISTORY) {
@@ -152,6 +146,28 @@ client.on('message', async (msg) => {
       msg.reply('Sorry, I encountered an error processing your message.');
     }
   }
+  // Handle sticker creation only if message is '.sticker' and has quoted message
+  else if (msg.body === '.sticker' && msg.hasQuotedMsg) {
+    try {
+      const quotedMsg = await msg.getQuotedMessage();
+      if (quotedMsg.hasMedia) {
+        const media = await quotedMsg.downloadMedia();
+        if (media.mimetype.startsWith('image/')) {
+          console.log('Creating sticker from quoted image...');
+          await client.sendMessage(msg.from, media, { sendMediaAsSticker: true });
+          console.log('Sticker sent.');
+        } else {
+          msg.reply('Quoted message is not an image.');
+        }
+      } else {
+        msg.reply('Quoted message does not contain media.');
+      }
+    } catch (error) {
+      console.error('Error creating sticker:', error);
+      msg.reply('Sorry, I encountered an error creating the sticker.');
+    }
+  }
+  // Ignore other messages
 });
 
 process.on('unhandledRejection', (reason, promise) => {
