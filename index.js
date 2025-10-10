@@ -3,6 +3,7 @@ const qrcodeTerminal = require('qrcode-terminal');
 const qrcode = require('qrcode');
 const axios = require('axios');
 const fs = require('fs');
+const express = require('express');
 
 const SESSION_FILE_PATH = './session.json';
 let sessionCfg;
@@ -13,21 +14,15 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
 const client = new Client({
   session: sessionCfg,
   puppeteer: {
-    headless: true,
+    headless: false, // Set to false to allow browser window for proper loading
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
+      '--disable-extensions',
       '--disable-gpu',
-      '--disable-web-security',
-      '--disable-features=VizDisplayCompositor',
-      '--disable-background-timer-throttling',
-      '--disable-renderer-backgrounding',
-      '--disable-backgrounding-occluded-windows',
-      '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      '--disable-infobars',
+      '--start-maximized'
     ]
   }
 });
@@ -53,9 +48,15 @@ client.on('qr', (qr) => {
 
 
 
+client.on('loading_screen', (percent, message) => {
+  console.log('Loading screen:', percent, message);
+});
+
 client.on('authenticated', (session) => {
   console.log('Authenticated!');
-  fs.writeFileSync(SESSION_FILE_PATH, JSON.stringify(session));
+  if (session) {
+    fs.writeFileSync(SESSION_FILE_PATH, JSON.stringify(session));
+  }
 });
 
 client.on('ready', () => {
@@ -153,4 +154,10 @@ process.on('unhandledRejection', (reason, promise) => {
   }
 });
 
+// Express server for keep-alive
+const app = express();
+app.get("/", (req, res) => res.send("Bot aktif 🚀"));
+app.listen(3000, () => console.log("Keep-alive server aktif di port 3000"));
+
+console.log('Initializing client...');
 client.initialize();

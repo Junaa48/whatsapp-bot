@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["...", "glibc", "glib", "gtk3", "libxss", "libgconf-2", "libxtst", "libxrandr", "libasound", "libpangocairo", "libatk1.0", "libcairo-gobject", "libgtk-3", "libgdk-pixbuf", "libxcomposite", "libxcursor", "libxdamage", "libxi", "libxtst", "libnss3", "libatk-bridge2.0", "libdrm", "libxkbcommon", "libxss", "libasound2"]
+nixPkgs = ["...", "glibc", "glib", "gtk3", "libxss", "libgconf-2", "libxtst", "libxrandr", "libasound", "libpangocairo", "libatk1.0", "libcairo-gobject", "libgtk-3", "libgdk-pixbuf", "libxcomposite", "libxcursor", "libxdamage", "libxi", "libxtst", "libnss3", "libatk-bridge2.0", "libdrm", "libxkbcommon", "libxss", "libasound2", "chromium", "nss", "libxshmfence", "mesa", "fontconfig"]
 
 [phases.install]
 cmds = ["npm install"]
