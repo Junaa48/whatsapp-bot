@@ -14,7 +14,7 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
 const client = new Client({
   session: sessionCfg,
   puppeteer: {
-    headless: false, // Set to false to allow browser window for proper loading
+    headless: true, // Set to true for containerized environments without display
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
