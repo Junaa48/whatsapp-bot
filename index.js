@@ -147,7 +147,7 @@ client.on('message', async (msg) => {
     }
   }
   // Handle sticker creation only if message is '.sticker' and has quoted message
-  else if (msg.body === '.sticker' && msg.hasQuotedMsg) {
+  else if (msg.body === '!sticker' && msg.hasQuotedMsg) {
     try {
       const quotedMsg = await msg.getQuotedMessage();
       if (quotedMsg.hasMedia) {
