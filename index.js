@@ -176,12 +176,16 @@ client.on('message', async (msg) => {
         return;
       }
 
-      // Optional: only allow group admins to use this command
+      // Cek admin: WhatsApp sometimes uses participant.isAdmin, sometimes participant.isSuperAdmin, and sometimes only one is true for owner
       const authorId = msg.author || msg.from; // in groups, msg.author exists
       const participant = chat.participants.find(p => p.id._serialized === authorId);
-      const isAdmin = participant && (participant.isAdmin || participant.isSuperAdmin);
+      let isAdmin = false;
+      if (participant) {
+        // WhatsApp-web.js: isAdmin true for admin, isSuperAdmin true for owner
+        isAdmin = Boolean(participant.isAdmin) || Boolean(participant.isSuperAdmin);
+      }
       if (!isAdmin) {
-        msg.reply('Hanya admin grup yang dapat menggunakan perintah ini.');
+        msg.reply('Hanya admin atau owner grup yang dapat menggunakan perintah ini.');
         return;
       }
 
@@ -200,6 +204,7 @@ client.on('message', async (msg) => {
       }
 
       await chat.sendMessage(text, { mentions });
+      msg.reply(`Berhasil menandai ${mentions.length} anggota grup.`);
     } catch (err) {
       console.error('Error running tagall:', err);
       msg.reply('Terjadi kesalahan saat menandai semua anggota.');
