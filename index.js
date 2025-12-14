@@ -167,6 +167,44 @@ client.on('message', async (msg) => {
       msg.reply('Sorry, I encountered an error creating the sticker.');
     }
   }
+  // Tag all members in a group: usage '/tagall [optional message]'
+  else if (msg.body && msg.body.startsWith('/tagall')) {
+    try {
+      const chat = await msg.getChat();
+      if (!chat.isGroup) {
+        msg.reply('Perintah ini hanya bisa digunakan di grup.');
+        return;
+      }
+
+      // Optional: only allow group admins to use this command
+      const authorId = msg.author || msg.from; // in groups, msg.author exists
+      const participant = chat.participants.find(p => p.id._serialized === authorId);
+      const isAdmin = participant && (participant.isAdmin || participant.isSuperAdmin);
+      if (!isAdmin) {
+        msg.reply('Hanya admin grup yang dapat menggunakan perintah ini.');
+        return;
+      }
+
+      const parts = msg.body.split(' ');
+      const text = parts.slice(1).join(' ') || 'Hai semua!';
+
+      // Build mentions list
+      const mentions = [];
+      for (const p of chat.participants) {
+        try {
+          const contact = await client.getContactById(p.id._serialized);
+          mentions.push(contact);
+        } catch (err) {
+          console.warn('Gagal mengambil kontak untuk', p.id._serialized, err);
+        }
+      }
+
+      await chat.sendMessage(text, { mentions });
+    } catch (err) {
+      console.error('Error running tagall:', err);
+      msg.reply('Terjadi kesalahan saat menandai semua anggota.');
+    }
+  }
   // Ignore other messages
 });
 

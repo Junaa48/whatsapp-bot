@@ -8,6 +8,7 @@ Bot WhatsApp dengan fitur pembuatan sticker dan integrasi AI.
 - Chat AI menggunakan OpenRouter
 - Keep-alive server untuk mencegah sleep
 - Auto chat setiap 10 menit untuk menjaga koneksi aktif
+- Perintah `.tagall [pesan opsional]` untuk menandai semua anggota grup (hanya admin grup)
 
 ## Instalasi
 
